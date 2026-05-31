@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teach Screen</title>
+  <style>
+    :root {
+      --bg: #101723;
+      --panel: #1b2636;
+      --panel-light: #243247;
+      --text: #f3f7fb;
+      --muted: #a9b7c7;
+      --border: #38475d;
+      --success: #24a148;
+      --gray: #6f7785;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(47, 128, 237, 0.16), transparent 34%),
+        var(--bg);
+    }
+
+    .teach-screen {
+      display: grid;
+      grid-template-columns: 60% 40%;
+      min-height: 100vh;
+      padding: 28px;
+      gap: 24px;
+    }
+
+    .camera-section,
+    .setting-panel {
+      background: rgba(27, 38, 54, 0.94);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+    }
+
+    .camera-section {
+      display: flex;
+      flex-direction: column;
+      padding: 22px;
+    }
+
+    .screen-title {
+      margin: 0 0 18px;
+      font-size: 28px;
+    }
+
+    .camera-view {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 560px;
+      background: #000;
+      border: 2px solid #2f3f55;
+      border-radius: 14px;
+      color: #8f9bad;
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .setting-panel {
+      display: flex;
+      flex-direction: column;
+      padding: 28px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .panel-description {
+      margin: 10px 0 28px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    label {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      background: var(--panel-light);
+      font-size: 20px;
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: #2f80ed;
+      box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.18);
+    }
+
+    .button-area {
+      display: flex;
+      justify-content: flex-end;
+      gap: 14px;
+      margin-top: auto;
+      padding-top: 28px;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 170px;
+      padding: 17px 22px;
+      border: 0;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    .action-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .save-btn {
+      background: var(--success);
+    }
+
+    .main-btn {
+      background: var(--gray);
+    }
+
+    .saved-message {
+      min-height: 24px;
+      margin-top: 12px;
+      color: #7ee787;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    @media (max-width: 980px) {
+      .teach-screen {
+        grid-template-columns: 1fr;
+      }
+
+      .camera-view {
+        min-height: 420px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="teach-screen">
+    <section class="camera-section" aria-labelledby="cameraTitle">
+      <h1 id="cameraTitle" class="screen-title">Teach 화면</h1>
+      <div class="camera-view" aria-label="비전 카메라 더미 화면">
+        Camera View
+      </div>
+    </section>
+
+    <aside class="setting-panel" aria-labelledby="settingTitle">
+      <h2 id="settingTitle" class="panel-title">티칭 파라미터</h2>
+      <p class="panel-description">
+        검사 영역과 판정 기준값을 입력합니다. 실제 비전/PLC 연동 전 화면 테스트용 더미 UI입니다.
+      </p>
+
+      <form id="teachForm">
+        <div class="form-group">
+          <label for="inspectionX">검사 영역 X</label>
+          <input id="inspectionX" name="inspectionX" type="number" min="0" step="1" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label for="inspectionY">검사 영역 Y</label>
+          <input id="inspectionY" name="inspectionY" type="number" min="0" step="1" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label for="threshold">판정 기준값(Threshold)</label>
+          <input id="threshold" name="threshold" type="number" min="0" step="1" value="100" />
+        </div>
+
+        <p id="savedMessage" class="saved-message" aria-live="polite"></p>
+
+        <div class="button-area">
+          <button class="action-btn save-btn" type="submit">레시피 저장(Save)</button>
+          <a class="action-btn main-btn" href="main_screen.html">Main으로 가기</a>
+        </div>
+      </form>
+    </aside>
+  </main>
+
+  <script>
+    const teachForm = document.getElementById("teachForm");
+    const savedMessage = document.getElementById("savedMessage");
+
+    teachForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const recipe = {
+        inspectionX: Number(document.getElementById("inspectionX").value),
+        inspectionY: Number(document.getElementById("inspectionY").value),
+        threshold: Number(document.getElementById("threshold").value)
+      };
+
+      console.log("[DUMMY] Teach recipe saved:", recipe);
+      savedMessage.textContent = "레시피 값이 저장되었습니다. (더미 동작)";
+      alert("레시피 저장(Save) 버튼이 눌렸습니다. 콘솔에 입력값을 출력했습니다.");
+    });
+  </script>
+</body>
+</html>
