@@ -71,22 +71,26 @@
       flex-wrap: wrap;
     }
 
-    button {
+    button,
+    .nav-btn {
       border: 0;
       border-radius: 14px;
       color: #fff;
       font-size: 18px;
       font-weight: 700;
       cursor: pointer;
+      text-decoration: none;
       transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
     }
 
-    button:hover {
+    button:hover,
+    .nav-btn:hover {
       filter: brightness(1.08);
       transform: translateY(-1px);
     }
 
-    button:active {
+    button:active,
+    .nav-btn:active {
       transform: translateY(1px) scale(0.99);
     }
 
@@ -144,6 +148,13 @@
     .reset {
       background: var(--warning);
       color: #161616;
+    }
+
+    .nav-btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--primary);
     }
 
     .status-panel {
@@ -248,6 +259,7 @@
           <button class="operation-btn start" type="button" data-action="Start">시작(Start)</button>
           <button class="operation-btn stop" type="button" data-action="Stop">정지(Stop)</button>
           <button class="operation-btn reset" type="button" data-action="Reset">리셋(Reset)</button>
+          <a class="operation-btn nav-btn" href="io_screen.html" aria-label="I/O 모니터 화면으로 이동">I/O 모니터</a>
         </div>
       </div>
 
@@ -270,7 +282,7 @@
 
   <script>
     const modeButtons = document.querySelectorAll(".mode-btn");
-    const operationButtons = document.querySelectorAll(".operation-btn");
+    const operationButtons = document.querySelectorAll(".operation-btn[data-action]");
     const equipmentStatus = document.getElementById("equipmentStatus");
     const statusLamp = document.getElementById("statusLamp");
     const statusDescription = document.getElementById("statusDescription");
