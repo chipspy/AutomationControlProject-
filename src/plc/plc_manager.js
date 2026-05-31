@@ -229,6 +229,10 @@ class PlcManager {
 }
 
 // 브라우저 환경과 Node.js 환경에서 모두 사용할 수 있도록 처리
+if (typeof window !== "undefined") {
+  window.PlcManager = PlcManager;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = PlcManager;
 }
