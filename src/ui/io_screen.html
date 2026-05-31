@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>I/O Monitoring Screen</title>
+  <style>
+    :root {
+      --bg: #101723;
+      --panel: #1b2636;
+      --panel-light: #243247;
+      --text: #f3f7fb;
+      --muted: #a9b7c7;
+      --border: #38475d;
+      --on: #24a148;
+      --off: #6f7785;
+      --input: #2f80ed;
+      --output: #8a63d2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(47, 128, 237, 0.15), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(138, 99, 210, 0.16), transparent 34%),
+        var(--bg);
+    }
+
+    .io-screen {
+      min-height: 100vh;
+      padding: 28px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 0.02em;
+    }
+
+    .description {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      padding: 12px 16px;
+      background: rgba(27, 38, 54, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      white-space: nowrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .panel {
+      overflow: hidden;
+      background: rgba(27, 38, 54, 0.94);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      background: var(--panel-light);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .count-badge {
+      padding: 7px 12px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .input-badge {
+      background: var(--input);
+    }
+
+    .output-badge {
+      background: var(--output);
+    }
+
+    .point-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 16px;
+      margin: 0;
+      list-style: none;
+    }
+
+    .point-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 10px 12px;
+      background: rgba(16, 23, 35, 0.76);
+      border: 1px solid rgba(56, 71, 93, 0.75);
+      border-radius: 12px;
+    }
+
+    .lamp {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--off);
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.45);
+      transition: background-color 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .lamp.on {
+      background: var(--on);
+      box-shadow:
+        0 0 12px rgba(36, 161, 72, 0.78),
+        inset 0 0 4px rgba(255, 255, 255, 0.25);
+    }
+
+    .point-name {
+      min-width: 0;
+      font-weight: 800;
+    }
+
+    .point-state {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .force-btn {
+      min-width: 82px;
+      padding: 7px 10px;
+      border: 0;
+      border-radius: 9px;
+      color: #fff;
+      background: #4b5568;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.12s ease, filter 0.12s ease, background-color 0.12s ease;
+    }
+
+    .force-btn:hover {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+    }
+
+    .force-btn:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .force-btn.on {
+      background: var(--on);
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .io-screen {
+        padding: 18px;
+      }
+
+      .header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .legend {
+        flex-wrap: wrap;
+        white-space: normal;
+      }
+
+      .point-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="io-screen">
+    <header class="header">
+      <div>
+        <h1 class="title">자동화 설비 I/O 모니터링</h1>
+        <p class="description">
+          PLC 연결 전 화면 테스트용 더미 화면입니다. 출력 접점은 Force 버튼으로 ON/OFF 상태를 전환할 수 있습니다.
+        </p>
+      </div>
+      <div class="legend" aria-label="상태 범례">
+        <span class="legend-item"><span class="lamp on"></span>ON</span>
+        <span class="legend-item"><span class="lamp"></span>OFF</span>
+      </div>
+    </header>
+
+    <section class="layout">
+      <section class="panel" aria-labelledby="inputTitle">
+        <div class="panel-header">
+          <h2 id="inputTitle" class="panel-title">입력(Input) 32점</h2>
+          <span class="count-badge input-badge">INPUT 32</span>
+        </div>
+        <ul id="inputList" class="point-list"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="outputTitle">
+        <div class="panel-header">
+          <h2 id="outputTitle" class="panel-title">출력(Output) 32점</h2>
+          <span class="count-badge output-badge">OUTPUT 32</span>
+        </div>
+        <ul id="outputList" class="point-list"></ul>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const POINT_COUNT = 32;
+    const inputList = document.getElementById("inputList");
+    const outputList = document.getElementById("outputList");
+
+    function formatPointName(prefix, index) {
+      return `${prefix}${String(index).padStart(2, "0")}`;
+    }
+
+    function setPointState(row, isOn) {
+      const lamp = row.querySelector(".lamp");
+      const stateText = row.querySelector(".point-state");
+
+      lamp.classList.toggle("on", isOn);
+      stateText.textContent = isOn ? "ON" : "OFF";
+      row.dataset.state = isOn ? "on" : "off";
+    }
+
+    function createPointRow({ type, index, initialOn = false }) {
+      const row = document.createElement("li");
+      row.className = "point-row";
+      row.dataset.state = initialOn ? "on" : "off";
+
+      const lamp = document.createElement("span");
+      lamp.className = `lamp${initialOn ? " on" : ""}`;
+      lamp.setAttribute("aria-hidden", "true");
+
+      const name = document.createElement("span");
+      name.className = "point-name";
+      name.textContent = formatPointName(type === "input" ? "IN-" : "OUT-", index);
+
+      const state = document.createElement("span");
+      state.className = "point-state";
+      state.textContent = initialOn ? "ON" : "OFF";
+
+      row.append(lamp, name, state);
+
+      if (type === "output") {
+        const forceButton = document.createElement("button");
+        forceButton.className = `force-btn${initialOn ? " on" : ""}`;
+        forceButton.type = "button";
+        forceButton.textContent = initialOn ? "Force OFF" : "Force ON";
+
+        forceButton.addEventListener("click", () => {
+          const nextState = row.dataset.state !== "on";
+
+          setPointState(row, nextState);
+          forceButton.classList.toggle("on", nextState);
+          forceButton.textContent = nextState ? "Force OFF" : "Force ON";
+
+          console.log(`[DUMMY] ${name.textContent} forced ${nextState ? "ON" : "OFF"}`);
+        });
+
+        row.append(forceButton);
+      }
+
+      return row;
+    }
+
+    function renderInputPoints() {
+      for (let i = 1; i <= POINT_COUNT; i += 1) {
+        // 화면 확인을 쉽게 하기 위한 임시 패턴: 4번마다 ON 표시
+        const initialOn = i % 4 === 0;
+        inputList.append(createPointRow({ type: "input", index: i, initialOn }));
+      }
+    }
+
+    function renderOutputPoints() {
+      for (let i = 1; i <= POINT_COUNT; i += 1) {
+        outputList.append(createPointRow({ type: "output", index: i, initialOn: false }));
+      }
+    }
+
+    renderInputPoints();
+    renderOutputPoints();
+
+    console.log("[DUMMY] I/O monitoring screen initialized");
+  </script>
+</body>
+</html>
