@@ -24,7 +24,8 @@
 
     body {
       margin: 0;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       font-family: Arial, "Noto Sans KR", sans-serif;
       color: var(--text);
       background:
@@ -34,16 +35,19 @@
     }
 
     .io-screen {
-      min-height: 100vh;
-      padding: 28px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+      padding: 18px;
+      gap: 14px;
+      overflow: hidden;
     }
 
     .header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
+      align-items: center;
       gap: 18px;
-      margin-bottom: 24px;
     }
 
     .title {
@@ -53,9 +57,17 @@
     }
 
     .description {
-      margin: 8px 0 0;
+      margin: 6px 0 0;
       color: var(--muted);
       line-height: 1.5;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .legend {
@@ -76,18 +88,81 @@
       font-weight: 700;
     }
 
-    .layout {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 24px;
+    .main-btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 150px;
+      padding: 13px 16px;
+      border-radius: 14px;
+      color: #fff;
+      background: var(--off);
+      font-size: 16px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: transform 0.12s ease, filter 0.12s ease;
     }
 
-    .panel {
+    .main-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .tabs-shell {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 0;
       overflow: hidden;
       background: rgba(27, 38, 54, 0.94);
       border: 1px solid var(--border);
       border-radius: 18px;
       box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+    }
+
+    .tab-list {
+      display: flex;
+      gap: 0;
+      padding: 10px 12px 0;
+      background: var(--panel-light);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      min-width: 150px;
+      padding: 13px 18px;
+      border: 1px solid var(--border);
+      border-bottom: 0;
+      border-radius: 12px 12px 0 0;
+      color: var(--muted);
+      background: #172132;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    .tab-content {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: none;
+      grid-template-rows: auto 1fr;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .panel.active {
+      display: grid;
     }
 
     .panel-header {
@@ -122,11 +197,13 @@
 
     .point-list {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      padding: 16px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px;
       margin: 0;
       list-style: none;
+      overflow: hidden;
+      align-content: start;
     }
 
     .point-row {
@@ -134,8 +211,8 @@
       grid-template-columns: auto 1fr auto;
       align-items: center;
       gap: 10px;
-      min-height: 48px;
-      padding: 10px 12px;
+      min-height: 40px;
+      padding: 8px 10px;
       background: rgba(16, 23, 35, 0.76);
       border: 1px solid rgba(56, 71, 93, 0.75);
       border-radius: 12px;
@@ -195,14 +272,14 @@
     }
 
     @media (max-width: 1100px) {
-      .layout {
-        grid-template-columns: 1fr;
+      .point-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
     @media (max-width: 720px) {
       .io-screen {
-        padding: 18px;
+        padding: 12px;
       }
 
       .header {
@@ -217,6 +294,7 @@
 
       .point-list {
         grid-template-columns: 1fr;
+        overflow: auto;
       }
     }
   </style>
@@ -230,14 +308,23 @@
           PLC 연결 전 화면 테스트용 더미 화면입니다. 출력 접점은 Force 버튼으로 ON/OFF 상태를 전환할 수 있습니다.
         </p>
       </div>
-      <div class="legend" aria-label="상태 범례">
-        <span class="legend-item"><span class="lamp on"></span>ON</span>
-        <span class="legend-item"><span class="lamp"></span>OFF</span>
+      <div class="header-actions">
+        <div class="legend" aria-label="상태 범례">
+          <span class="legend-item"><span class="lamp on"></span>ON</span>
+          <span class="legend-item"><span class="lamp"></span>OFF</span>
+        </div>
+        <a class="main-btn" href="main_screen.html">Main으로 가기</a>
       </div>
     </header>
 
-    <section class="layout">
-      <section class="panel" aria-labelledby="inputTitle">
+    <section class="tabs-shell">
+      <div class="tab-list" role="tablist" aria-label="I/O 탭">
+        <button id="inputTab" class="tab-btn active" type="button" role="tab" aria-selected="true" aria-controls="inputPanel" data-tab="input">Input</button>
+        <button id="outputTab" class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="outputPanel" data-tab="output">Output</button>
+      </div>
+
+      <div class="tab-content">
+      <section id="inputPanel" class="panel active" role="tabpanel" aria-labelledby="inputTab">
         <div class="panel-header">
           <h2 id="inputTitle" class="panel-title">입력(Input) 32점</h2>
           <span class="count-badge input-badge">INPUT 32</span>
@@ -245,13 +332,14 @@
         <ul id="inputList" class="point-list"></ul>
       </section>
 
-      <section class="panel" aria-labelledby="outputTitle">
+      <section id="outputPanel" class="panel" role="tabpanel" aria-labelledby="outputTab">
         <div class="panel-header">
           <h2 id="outputTitle" class="panel-title">출력(Output) 32점</h2>
           <span class="count-badge output-badge">OUTPUT 32</span>
         </div>
         <ul id="outputList" class="point-list"></ul>
       </section>
+      </div>
     </section>
   </main>
 
@@ -259,6 +347,27 @@
     const POINT_COUNT = 32;
     const inputList = document.getElementById("inputList");
     const outputList = document.getElementById("outputList");
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const panels = {
+      input: document.getElementById("inputPanel"),
+      output: document.getElementById("outputPanel")
+    };
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const targetTab = button.dataset.tab;
+
+        tabButtons.forEach((tabButton) => {
+          const isActive = tabButton === button;
+          tabButton.classList.toggle("active", isActive);
+          tabButton.setAttribute("aria-selected", String(isActive));
+        });
+
+        Object.entries(panels).forEach(([key, panel]) => {
+          panel.classList.toggle("active", key === targetTab);
+        });
+      });
+    });
 
     function formatPointName(prefix, index) {
       return `${prefix}${String(index).padStart(2, "0")}`;
