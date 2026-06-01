@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alarm Screen</title>
+  <style>
+    :root {
+      --bg: #101723;
+      --panel: #1b2636;
+      --panel-light: #243247;
+      --text: #f3f7fb;
+      --muted: #a9b7c7;
+      --border: #38475d;
+      --danger: #da1e28;
+      --danger-dark: #8f1117;
+      --gray: #6f7785;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(218, 30, 40, 0.16), transparent 34%),
+        var(--bg);
+    }
+
+    .alarm-screen {
+      display: grid;
+      grid-template-rows: 30% 70%;
+      min-height: 100vh;
+      padding: 28px;
+      gap: 24px;
+    }
+
+    .active-panel,
+    .history-panel {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+    }
+
+    .active-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 28px;
+      background: linear-gradient(135deg, #3a1f26, #1b2636);
+    }
+
+    .active-panel.alarm-on {
+      background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+      border-color: #ffb3b8;
+      box-shadow:
+        0 0 0 6px rgba(218, 30, 40, 0.2),
+        0 16px 42px rgba(0, 0, 0, 0.4);
+    }
+
+    .panel-title {
+      margin: 0 0 16px;
+      font-size: 28px;
+    }
+
+    .active-message {
+      margin: 0;
+      color: var(--muted);
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .alarm-on .active-message {
+      color: #fff;
+      animation: blinkText 0.8s infinite;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    @keyframes blinkText {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.25;
+      }
+    }
+
+    .history-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: rgba(27, 38, 54, 0.94);
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+      background: var(--panel-light);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .history-header .panel-title {
+      margin: 0;
+    }
+
+    .table-wrap {
+      flex: 1;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    th,
+    td {
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(56, 71, 93, 0.75);
+      text-align: left;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      color: var(--muted);
+      background: #182233;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    td {
+      font-size: 17px;
+    }
+
+    .code {
+      color: #ffb3b8;
+      font-weight: 900;
+    }
+
+    .button-area {
+      position: fixed;
+      right: 34px;
+      bottom: 34px;
+      display: flex;
+      gap: 14px;
+      z-index: 10;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 180px;
+      padding: 18px 22px;
+      border: 0;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    .action-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .clear-btn {
+      background: var(--danger);
+    }
+
+    .main-btn {
+      background: var(--gray);
+    }
+
+    @media (max-width: 760px) {
+      .alarm-screen {
+        padding: 18px;
+      }
+
+      .button-area {
+        position: static;
+        flex-direction: column;
+        margin: 0 18px 18px;
+      }
+
+      .action-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="alarm-screen">
+    <section id="activePanel" class="active-panel" aria-live="assertive">
+      <h1 class="panel-title">현재 발생 알람(Active Alarms)</h1>
+      <p id="activeMessage" class="active-message">현재 발생한 알람이 없습니다.</p>
+    </section>
+
+    <section class="history-panel" aria-labelledby="historyTitle">
+      <div class="history-header">
+        <h2 id="historyTitle" class="panel-title">알람 발생 이력(Alarm History)</h2>
+        <span id="historyCount">0건</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>발생 시간</th>
+              <th>에러 코드</th>
+              <th>상세 설명</th>
+            </tr>
+          </thead>
+          <tbody id="alarmHistoryBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="button-area">
+    <button id="clearButton" class="action-btn clear-btn" type="button">알람 해제(Alarm Clear)</button>
+    <a class="action-btn main-btn" href="main_screen.html">Main으로 가기</a>
+  </div>
+
+  <script>
+    const activePanel = document.getElementById("activePanel");
+    const activeMessage = document.getElementById("activeMessage");
+    const alarmHistoryBody = document.getElementById("alarmHistoryBody");
+    const historyCount = document.getElementById("historyCount");
+    const clearButton = document.getElementById("clearButton");
+    const alarmHistory = [];
+
+    const dummyAlarm = {
+      code: "E-STOP-001",
+      description: "비상정지 회로 입력이 감지되었습니다. 설비 상태를 확인하세요."
+    };
+
+    function formatNow() {
+      const now = new Date();
+      return now.toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    function renderHistory() {
+      alarmHistoryBody.innerHTML = "";
+
+      alarmHistory.forEach((alarm) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${alarm.time}</td>
+          <td class="code">${alarm.code}</td>
+          <td>${alarm.description}</td>
+        `;
+        alarmHistoryBody.append(row);
+      });
+
+      historyCount.textContent = `${alarmHistory.length}건`;
+    }
+
+    function triggerAlarm(alarm) {
+      const alarmData = {
+        time: formatNow(),
+        code: alarm.code,
+        description: alarm.description
+      };
+
+      activePanel.classList.add("alarm-on");
+      activeMessage.textContent = `[${alarmData.code}] ${alarmData.description}`;
+      alarmHistory.unshift(alarmData);
+      renderHistory();
+
+      console.warn("[DUMMY] Alarm triggered:", alarmData);
+    }
+
+    function clearAlarm() {
+      activePanel.classList.remove("alarm-on");
+      activeMessage.textContent = "현재 발생한 알람이 없습니다.";
+      console.log("[DUMMY] Alarm cleared");
+      alert("알람이 해제되었습니다. (더미 동작)");
+    }
+
+    clearButton.addEventListener("click", clearAlarm);
+
+    window.addEventListener("load", () => {
+      console.log("[DUMMY] 3초 뒤 가짜 알람이 발생합니다.");
+      setTimeout(() => {
+        triggerAlarm(dummyAlarm);
+      }, 3000);
+    });
+  </script>
+</body>
+</html>
