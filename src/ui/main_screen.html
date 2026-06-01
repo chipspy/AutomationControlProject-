@@ -192,6 +192,33 @@
       line-height: 1.6;
     }
 
+    .system-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .summary-item {
+      padding: 12px;
+      background: rgba(16, 23, 35, 0.72);
+      border: 1px solid rgba(56, 71, 93, 0.75);
+      border-radius: 12px;
+    }
+
+    .summary-label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .summary-value {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
     .emo-btn {
       position: fixed;
       right: 34px;
@@ -239,6 +266,10 @@
         height: 190px;
         font-size: 30px;
       }
+
+      .system-summary {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -260,7 +291,9 @@
           <button class="operation-btn stop" type="button" data-action="Stop">정지(Stop)</button>
           <button class="operation-btn reset" type="button" data-action="Reset">리셋(Reset)</button>
           <a class="operation-btn nav-btn" href="io_screen.html" aria-label="I/O 모니터 화면으로 이동">I/O 모니터</a>
-          <a class="operation-btn nav-btn" href="teach_screen.html" aria-label="TEACH 화면으로 이동">TEACH</a>
+          <a class="operation-btn nav-btn" href="teach_screen.html" aria-label="Teach 화면으로 이동">Teach 화면</a>
+          <a class="operation-btn nav-btn" href="recipe_screen.html" aria-label="Recipe 관리 화면으로 이동">Recipe 관리</a>
+          <a class="operation-btn nav-btn" href="alarm_screen.html" aria-label="Alarm 화면으로 이동">Alarm 화면</a>
         </div>
       </div>
 
@@ -273,6 +306,20 @@
         <p id="statusDescription" class="status-description">
           설비가 대기 상태입니다. 실제 PLC 연동 코드는 추후 연결 예정입니다.
         </p>
+        <div class="system-summary" aria-label="시스템 초기화 상태">
+          <div class="summary-item">
+            <span class="summary-label">PLC 통신</span>
+            <span id="plcStatus" class="summary-value">Initializing</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Recipe</span>
+            <span id="recipeStatus" class="summary-value">Loading</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Alarm 감시</span>
+            <span id="alarmStatus" class="summary-value">Starting</span>
+          </div>
+        </div>
       </aside>
     </section>
 
@@ -282,6 +329,7 @@
   </main>
 
   <script src="../plc/plc_manager.js"></script>
+  <script src="../config/file_manager.js"></script>
   <script>
     const modeButtons = document.querySelectorAll(".mode-btn");
     const operationButtons = document.querySelectorAll(".operation-btn[data-action]");
@@ -289,14 +337,20 @@
     const statusLamp = document.getElementById("statusLamp");
     const statusDescription = document.getElementById("statusDescription");
     const emoButton = document.getElementById("emoButton");
+    const plcStatus = document.getElementById("plcStatus");
+    const recipeStatus = document.getElementById("recipeStatus");
+    const alarmStatus = document.getElementById("alarmStatus");
     const plcManager = new PlcManager({
       host: "192.168.0.10",
       port: 502,
       timeoutMs: 3000,
       reconnectIntervalMs: 5000
     });
-
-    plcManager.connect();
+    const simulationState = {
+      mode: "SIMULATION",
+      activeRecipe: null,
+      alarmMonitorTimer: null
+    };
 
     const statusConfig = {
       Run: {
@@ -325,6 +379,49 @@
       statusDescription.textContent = config.description;
 
       console.log(`[DUMMY] Equipment status changed to: ${status}`);
+    }
+
+    async function initializeSystem() {
+      console.log("[INIT] v1.0 통합 초기화 시작 - 안전 Dummy 시뮬레이션 모드");
+
+      await initializePlc();
+      initializeRecipe();
+      initializeAlarmMonitor();
+
+      console.log("[INIT] v1.0 통합 초기화 완료");
+    }
+
+    async function initializePlc() {
+      plcStatus.textContent = "Connecting";
+      await plcManager.connect();
+      plcStatus.textContent = plcManager.isConnected ? "Connected" : "Retrying";
+    }
+
+    function initializeRecipe() {
+      const dummyRecipe = {
+        name: "Model_A",
+        moveSpeed: 120,
+        targetQty: 1000,
+        inspectionThreshold: 85
+      };
+
+      // 실제 파일 자동 접근은 브라우저 보안상 불가하므로, 안전한 더미 레시피를 메모리에 로드합니다.
+      simulationState.activeRecipe = dummyRecipe;
+      recipeStatus.textContent = `${dummyRecipe.name} Loaded`;
+      console.log("[INIT] 레시피 파일 로드 시뮬레이션:", dummyRecipe);
+
+      if (typeof FileManager !== "undefined") {
+        console.log("[INIT] FileManager 준비 완료 - Recipe 화면에서 JSON/CSV Export/Import 연동 가능");
+      }
+    }
+
+    function initializeAlarmMonitor() {
+      alarmStatus.textContent = "Monitoring";
+      console.log("[INIT] 알람 감시 시작 - Dummy 안전 감시 모드");
+
+      simulationState.alarmMonitorTimer = setInterval(() => {
+        console.log("[DUMMY] 알람 감시 Heartbeat: 정상");
+      }, 10000);
     }
 
     modeButtons.forEach((button) => {
@@ -362,9 +459,12 @@
 
     emoButton.addEventListener("click", () => {
       console.warn("[DUMMY] EMO button clicked");
+      alarmStatus.textContent = "EMO Alarm";
       setStatus("Alarm");
       alert("비상정지(EMO) 버튼이 눌렸습니다. (더미 동작)");
     });
+
+    window.addEventListener("load", initializeSystem);
   </script>
 </body>
 </html>
