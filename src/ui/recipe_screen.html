@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipe Management Screen</title>
+  <style>
+    :root {
+      --bg: #101723;
+      --panel: #1b2636;
+      --panel-light: #243247;
+      --text: #f3f7fb;
+      --muted: #a9b7c7;
+      --border: #38475d;
+      --primary: #2f80ed;
+      --success: #24a148;
+      --warning: #f1c21b;
+      --gray: #6f7785;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(47, 128, 237, 0.16), transparent 34%),
+        var(--bg);
+    }
+
+    .recipe-screen {
+      display: grid;
+      grid-template-columns: 30% 70%;
+      min-height: 100vh;
+      padding: 28px;
+      gap: 24px;
+    }
+
+    .recipe-list-panel,
+    .recipe-detail-panel {
+      background: rgba(27, 38, 54, 0.94);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+    }
+
+    .recipe-list-panel {
+      padding: 22px;
+    }
+
+    .recipe-detail-panel {
+      display: flex;
+      flex-direction: column;
+      padding: 28px;
+    }
+
+    .panel-title {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+
+    .panel-description {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .recipe-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    .recipe-item {
+      width: 100%;
+      padding: 18px 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      background: var(--panel-light);
+      font-size: 18px;
+      font-weight: 800;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+    }
+
+    .recipe-item:hover {
+      transform: translateY(-1px);
+      border-color: var(--primary);
+    }
+
+    .recipe-item.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.2);
+    }
+
+    .selected-name {
+      margin: 0 0 26px;
+      color: var(--muted);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .selected-name strong {
+      color: var(--text);
+      font-size: 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    label {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      background: var(--panel-light);
+      font-size: 20px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.18);
+    }
+
+    .button-area {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: auto;
+      padding-top: 28px;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 150px;
+      padding: 16px 20px;
+      border: 0;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    .action-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .new-btn {
+      background: var(--gray);
+    }
+
+    .save-btn {
+      background: var(--success);
+    }
+
+    .load-btn {
+      background: var(--warning);
+      color: #161616;
+    }
+
+    .main-btn {
+      background: var(--primary);
+    }
+
+    .message {
+      min-height: 24px;
+      margin-top: 18px;
+      color: #7ee787;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    @media (max-width: 980px) {
+      .recipe-screen {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="recipe-screen">
+    <aside class="recipe-list-panel" aria-labelledby="recipeListTitle">
+      <h1 id="recipeListTitle" class="panel-title">Recipe 목록</h1>
+      <p class="panel-description">등록된 모델을 선택하면 오른쪽 파라미터가 더미 데이터로 변경됩니다.</p>
+
+      <ul id="recipeList" class="recipe-list"></ul>
+    </aside>
+
+    <section class="recipe-detail-panel" aria-labelledby="recipeDetailTitle">
+      <h2 id="recipeDetailTitle" class="panel-title">Recipe 세부 파라미터</h2>
+      <p class="selected-name">선택 모델: <strong id="selectedRecipeName">Model_A</strong></p>
+
+      <form id="recipeForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="recipeName">모델명</label>
+            <input id="recipeName" name="recipeName" type="text" />
+          </div>
+
+          <div class="form-group">
+            <label for="moveSpeed">이동 속도</label>
+            <input id="moveSpeed" name="moveSpeed" type="number" min="0" step="1" />
+          </div>
+
+          <div class="form-group">
+            <label for="targetQty">목표 수량</label>
+            <input id="targetQty" name="targetQty" type="number" min="0" step="1" />
+          </div>
+
+          <div class="form-group">
+            <label for="inspectionThreshold">검사 기준값</label>
+            <input id="inspectionThreshold" name="inspectionThreshold" type="number" min="0" step="1" />
+          </div>
+        </div>
+
+        <p id="message" class="message" aria-live="polite"></p>
+
+        <div class="button-area">
+          <button class="action-btn new-btn" type="button" id="newButton">신규(New)</button>
+          <button class="action-btn save-btn" type="submit">저장(Save)</button>
+          <button class="action-btn load-btn" type="button" id="loadButton">설비 적용(Load)</button>
+          <a class="action-btn main-btn" href="main_screen.html">Main으로 가기</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const dummyRecipes = {
+      Model_A: {
+        moveSpeed: 120,
+        targetQty: 1000,
+        inspectionThreshold: 85
+      },
+      Model_B: {
+        moveSpeed: 95,
+        targetQty: 800,
+        inspectionThreshold: 78
+      },
+      Model_C: {
+        moveSpeed: 140,
+        targetQty: 1500,
+        inspectionThreshold: 92
+      }
+    };
+
+    const recipeList = document.getElementById("recipeList");
+    const selectedRecipeName = document.getElementById("selectedRecipeName");
+    const recipeNameInput = document.getElementById("recipeName");
+    const moveSpeedInput = document.getElementById("moveSpeed");
+    const targetQtyInput = document.getElementById("targetQty");
+    const inspectionThresholdInput = document.getElementById("inspectionThreshold");
+    const recipeForm = document.getElementById("recipeForm");
+    const newButton = document.getElementById("newButton");
+    const loadButton = document.getElementById("loadButton");
+    const message = document.getElementById("message");
+
+    function setMessage(text) {
+      message.textContent = text;
+      console.log(`[DUMMY] ${text}`);
+    }
+
+    function fillRecipeForm(name) {
+      const recipe = dummyRecipes[name];
+
+      selectedRecipeName.textContent = name;
+      recipeNameInput.value = name;
+      moveSpeedInput.value = recipe.moveSpeed;
+      targetQtyInput.value = recipe.targetQty;
+      inspectionThresholdInput.value = recipe.inspectionThreshold;
+
+      document.querySelectorAll(".recipe-item").forEach((button) => {
+        button.classList.toggle("active", button.dataset.recipeName === name);
+      });
+
+      setMessage(`${name} 레시피를 불러왔습니다.`);
+    }
+
+    function renderRecipeList() {
+      Object.keys(dummyRecipes).forEach((name) => {
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "recipe-item";
+        button.dataset.recipeName = name;
+        button.textContent = name;
+        button.addEventListener("click", () => fillRecipeForm(name));
+
+        item.append(button);
+        recipeList.append(item);
+      });
+    }
+
+    newButton.addEventListener("click", () => {
+      selectedRecipeName.textContent = "New_Model";
+      recipeNameInput.value = "New_Model";
+      moveSpeedInput.value = 0;
+      targetQtyInput.value = 0;
+      inspectionThresholdInput.value = 0;
+
+      document.querySelectorAll(".recipe-item").forEach((button) => {
+        button.classList.remove("active");
+      });
+
+      setMessage("신규 레시피 입력 상태입니다. (더미 동작)");
+    });
+
+    recipeForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const recipe = {
+        name: recipeNameInput.value,
+        moveSpeed: Number(moveSpeedInput.value),
+        targetQty: Number(targetQtyInput.value),
+        inspectionThreshold: Number(inspectionThresholdInput.value)
+      };
+
+      console.log("[DUMMY] Recipe saved:", recipe);
+      setMessage(`${recipe.name} 레시피를 저장했습니다. (더미 동작)`);
+      alert("저장(Save) 버튼이 눌렸습니다. 콘솔에 레시피 값을 출력했습니다.");
+    });
+
+    loadButton.addEventListener("click", () => {
+      console.log("[DUMMY] Recipe loaded to equipment:", recipeNameInput.value);
+      setMessage(`${recipeNameInput.value} 레시피를 설비에 적용했습니다. (더미 동작)`);
+      alert("설비 적용(Load) 버튼이 눌렸습니다. (더미 동작)");
+    });
+
+    renderRecipeList();
+    fillRecipeForm("Model_A");
+  </script>
+</body>
+</html>
